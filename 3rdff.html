@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      margin: 0; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; color: #fff;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .card, .box {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transition: 0.4s;
+    }
+
+    .box {
+      margin-top: 20px;
+    }
+
+    h1 { margin-bottom: 20px; }
+    input {
+      width: 80%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      background: #ff9800;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #ffa726; }
+
+    .hidden { display: none; }
+
+    .option {
+      display: block;
+      background: rgba(255,255,255,0.15);
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .option:hover { background: rgba(255,255,255,0.3); }
+
+    .result {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- LOGIN PAGE -->
+    <div class="card" id="loginPage">
+      <h1>Login to Start Quiz</h1>
+      <input type="text" id="username" placeholder="Enter your name">
+      <input type="text" id="rollnumber" placeholder="Enter your roll number">
+      <br>
+      <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- QUIZ PAGE -->
+    <div class="card hidden" id="quizPage">
+      <h1 id="welcome"></h1>
+      <p id="studentInfo"></p>
+      <p id="question"></p>
+      <div id="answers"></div>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <!-- RESULT PAGE -->
+    <div class="card hidden" id="resultPage">
+      <h1>🎉 Quiz Completed!</h1>
+      <p class="result" id="result"></p>
+      <button onclick="restartQuiz()">Play Again</button>
+    </div>
+
+    <!-- JOKE BOX -->
+    <div class="box">
+      <h2>😂 Random Joke</h2>
+      <p id="joke">Click the button to load a joke...</p>
+      <button onclick="getJoke()">Get Joke</button>
+    </div>
+  </div>
+
+  <script>
+    // QUIZ DATA
+    const quiz = [
+      { q: "Which HTML tag is used to define a hyperlink?", options: ["<link>", " <a>", "<href>"], answer: "<a>" },
+      { q: "Which CSS property is used to change the text color of an element?", options: ["background-color", "font-color", "color"], answer: "color" },
+      { q: "How do you declare a variable in JavaScript?", options: ["variable myVar;", "v myVar;", "var myVar;"], answer: "var myVar;" },
+      { q: "You are designing a website layout using CSS. You want to ensure that the container of a section takes up 50% of the screen width, regardless of the user's screen size. Which of the following is the correct CSS property to achieve this?", options: ["width: 50px;", " width: 50%;", "max-width: 50%;"], answer: " width: 50%;" },
+        { q: "You want to create a form in HTML. Which of the following tags is used to group together form controls such as inputs and labels?", options: ["<div>", "<form>", " <fieldset>"], answer: " <fieldset>" },
+        { q: "In CSS, how would you center a block-level element horizontally within its parent container?", options: [" margin: auto;", "text-align: center;", "position: center;"], answer: "margin: auto;" },
+        { q: "Which of the following CSS properties will remove the default bullet points from an unordered list?", options: ["list-style: none;", "display: block;", "text-decoration: none;"], answer: "list-style: none;" },
+        { q: "Which HTML tag is used for the largest heading?", options: ["<heading>", "<h1>", "<h6>"], answer: "<h1>" },
+        { q: "Which HTML attribute is used to define inline styles directly on an element?", options: [" class", " id", "style"], answer: "style" },
+        { q: "Which of the following is the correct HTML5 doctype declaration?", options: ["<!DOCTYPE html>", "<!DOCTYPE h5>", " <DOCTYPE html>"], answer: "<!DOCTYPE html>" },
+    ];
+
+    let current = 0, score = 0, username = "", rollnumber = "", selected = "";
+
+    function startQuiz() {
+      username = document.getElementById("username").value.trim();
+      rollnumber = document.getElementById("rollnumber").value.trim();
+
+      if (username === "" || rollnumber === "") {
+        alert("Please enter both Name and Roll Number!");
+        return;
+      }
+
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("quizPage").classList.remove("hidden");
+
+      document.getElementById("welcome").innerText = `Hello, ${username}!`;
+      document.getElementById("studentInfo").innerText = `Roll No: ${rollnumber}`;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      document.getElementById("question").innerText = quiz[current].q;
+      let ansDiv = document.getElementById("answers");
+      ansDiv.innerHTML = "";
+      selected = "";
+      quiz[current].options.forEach(opt => {
+        let div = document.createElement("div");
+        div.className = "option";
+        div.innerText = opt;
+        div.onclick = () => {
+          selected = opt;
+          document.querySelectorAll(".option").forEach(o => o.style.background = "rgba(255,255,255,0.15)");
+          div.style.background = "#4caf50";
+        };
+        ansDiv.appendChild(div);
+      });
+    }
+
+    function nextQuestion() {
+      if (selected === quiz[current].answer) score++;
+      current++;
+      if (current < quiz.length) {
+        loadQuestion();
+      } else {
+        document.getElementById("quizPage").classList.add("hidden");
+        document.getElementById("resultPage").classList.remove("hidden");
+        document.getElementById("result").innerText = 
+          `${username} (Roll No: ${rollnumber}), your score is ${score}/${quiz.length}`;
+      }
+    }
+
+    async function getJoke() {
+      let res = await fetch("https://official-joke-api.appspot.com/random_joke");
+      let data = await res.json();
+      document.getElementById("joke").innerText = `${data.setup} 🤔 ${data.punchline}`;
+    }
+
+    function restartQuiz() {
+      current = 0; score = 0;
+      document.getElementById("resultPage").classList.add("hidden");
+      document.getElementById("loginPage").classList.remove("hidden");
+      document.getElementById("username").value = "";
+      document.getElementById("rollnumber").value = "";
+    }
+  </script>
+</body>
+</html>
